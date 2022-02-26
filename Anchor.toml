@@ -1,5 +1,9 @@
 [features]
 seeds = false
+
+[programs.localnet]
+flobrij = "6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve"
+
 [programs.devnet]
 flobrij = "6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve"
 
@@ -7,7 +11,7 @@ flobrij = "6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

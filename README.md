@@ -19,18 +19,6 @@ In a second terminal window, build and deploy the contract via:
     solana airdrop 5    # if your wallet is empty
     anchor deploy
 
-Update Anchor.toml with these two changes
-
-```
-[programs.localnet]
-flobrij = "PROGRAM ID FROM DEPLOY STEP ABOVE"
-```
-
-```
-[provider]
-cluster = "localnet"
-```
-
 ## Copy IDL to front-end
 
     cp target/idl/flobrij.json ~/flobrij-frontend/src/
