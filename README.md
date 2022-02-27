@@ -21,4 +21,4 @@ In a second terminal window, build and deploy the contract via:
 
 ## Copy IDL to front-end
 
-    cp target/idl/flobrij.json ~/flobrij-frontend/src/
+    cp target/idl/flobrij.json ~/flobrij-frontend/src/idl.json
