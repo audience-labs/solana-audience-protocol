@@ -21,6 +21,14 @@ In a second terminal window, build and deploy the contract via:
     solana airdrop 5    # if your wallet is empty
     anchor deploy
 
-## Copy IDL to front-end
+Copy IDL to front-end
 
     cp target/idl/flobrij.json ~/flobrij-frontend/src/idl.json
+
+## Run Tests
+
+    yarn install
+
+**Make sure you don't have solana-test-validator running before running tests**
+
+    anchor test     # which runs validator and tests in one go
