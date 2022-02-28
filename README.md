@@ -4,6 +4,8 @@ If you're new to Solana here is a tutorial for setting up the tools, creating yo
 
 ## Local Setup
 
+    yarn install
+
     # set to run locally
     solana config set --url localhost
 
