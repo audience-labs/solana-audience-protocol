@@ -98,13 +98,13 @@ describe('flobrij', () => {
 
   it('Send and retrieve to me', async() => { 
     const receipt = anchor.web3.Keypair.generate(); 
-    const fakeRecipient = "EjVxdTp7NXqUtqSACXeMojnTUwkFhr1wd5rxmDSLrstd";
-
+    const fakeRecipient = new anchor.web3.PublicKey("EjVxdTp7NXqUtqSACXeMojnTUwkFhr1wd5rxmDSLrstd")
+    
     const fakeTransaction = anchor.web3.Keypair.generate(); 
     const fakeUser = anchor.web3.Keypair.generate(); 
     const signature = await program.provider.connection.requestAirdrop(fakeUser.publicKey, 1000000000);
     await program.provider.connection.confirmTransaction(signature);
-    
+
     const tx = await program.rpc.createReceipt(fakeTransaction.publicKey, fakeRecipient, EMAIL, 5000, EXP_HOURS, {
         accounts: {
           // Accounts here...
@@ -134,7 +134,7 @@ describe('flobrij', () => {
     console.log("\n\n This is the account that's interesting: ");
     console.log(receiptAccounts);
     assert.ok(receiptAccounts.every(recipientAccounts =>{
-      return recipientAccounts.account.recipient.toBase58() === fakeRecipient;
+      return recipientAccounts.account.recipient.toBase58() === fakeRecipient.toBase58();
     })); 
 
   });
