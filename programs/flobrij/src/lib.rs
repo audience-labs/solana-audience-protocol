@@ -8,15 +8,17 @@ declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
 pub mod flobrij {
     use super::*;
     pub fn create_receipt(ctx: Context<CreateReceipt>, 
-        transaction: Pubkey, 
-        recipient: Pubkey, 
+        patron_payment_transaction: Pubkey, 
+        creator: Pubkey, 
         email: String, 
         amount: u32, 
         expiration_hours: u16
     ) -> ProgramResult {
+
+        msg!("Some variable: {:?}", patron_payment_transaction);
         /*
         * TODO: 
-        *  - We should look up the transaction and pull it's information instead of just taking it from the call. Figure this out later.
+        *  - We should look up the patron_payment_transaction and pull it's information instead of just taking it from the call. Figure this out later.
         */ 
         let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt; 
         let payer: &Signer = &ctx.accounts.payer; 
@@ -25,15 +27,15 @@ pub mod flobrij {
         receipt.payer = *payer.key; 
         receipt.timestamp = clock.unix_timestamp; 
 
-        // TODO: Get transaction information, make sure it's a valid transaction
-        //      - Make sure the payer and the recipient match the transaction as well as the amount
+        // TODO: Get patron_payment_transaction information, make sure it's a valid patron_payment_transaction
+        //      - Make sure the payer and the recipient match the patron_payment_transaction as well as the amount
 
         if email.chars().count() > 254 {
             return Err(ErrorCode::EmailTooLong.into())
         }
 
-        receipt.transaction = transaction; 
-        receipt.recipient = recipient; 
+        receipt.transaction = patron_payment_transaction; 
+        receipt.recipient = creator; 
         receipt.email = email; 
         receipt.amount = amount; 
         receipt.expiration_hours = expiration_hours; 

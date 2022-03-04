@@ -29,6 +29,10 @@ Copy IDL to front-end
 
     yarn install
 
+## Run code formatter on tests
+
+    yarn style
+
 **Make sure you don't have solana-test-validator running before running tests**
 
     anchor test     # which runs validator and tests in one go
