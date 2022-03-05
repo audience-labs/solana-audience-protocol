@@ -9,17 +9,10 @@ declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
 pub mod flobrij {
     use super::*;
     pub fn create_receipt(ctx: Context<CreateReceipt>, 
-        patron_payment_transaction: Pubkey, 
-        creator: Pubkey, 
         email: String,
         amount: u64,
         expiration_hours: u16
     ) -> ProgramResult {
-
-        /*
-        * TODO: 
-        *  - We should look up the patron_payment_transaction and pull it's information instead of just taking it from the call. Figure this out later.
-        */ 
         let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt; 
         let payer: &Signer = &ctx.accounts.payer; 
         let clock: Clock = Clock::get().unwrap();
@@ -48,8 +41,7 @@ pub mod flobrij {
             ],
         ).unwrap_or_else(|err| println!("{:?}", err));
 
-        receipt.transaction = patron_payment_transaction; 
-        receipt.recipient = creator; 
+        receipt.recipient = ctx.accounts.creator.key(); //  .creator.pub(); //creator; 
         receipt.email = email; 
         receipt.amount = amount; 
         receipt.expiration_hours = expiration_hours; 
@@ -78,7 +70,6 @@ pub struct Receipt {
     pub expiration_hours: u16, 
     pub email: String, 
     pub amount: u64,
-    pub transaction: Pubkey, 
 }
 
 // Sizing consts
@@ -91,7 +82,6 @@ const EXPIRATION_HOURS_LENGTH: usize = 2;
 const STRING_LENGTH_PREFIX: usize = 4; // Stores the size of the string.
 const MAX_EMAIL_LENGTH: usize = 254 * 4; // 254 chars max.
 const AMOUNT_LENGTH: usize = 8;
-const TRANSACTION_PUBLIC_KEY_LENGTH: usize = 32;
 
 impl Receipt {
     const LEN: usize = DISCRIMINATOR_LENGTH
@@ -100,8 +90,7 @@ impl Receipt {
     + TIMESTAMP_LENGTH
     + EXPIRATION_HOURS_LENGTH
     + STRING_LENGTH_PREFIX + MAX_EMAIL_LENGTH
-    + AMOUNT_LENGTH
-    + TRANSACTION_PUBLIC_KEY_LENGTH; 
+    + AMOUNT_LENGTH; 
 }
 
 #[error]

@@ -34,22 +34,12 @@ describe('flobrij', () => {
     );
 
     const receipt = anchor.web3.Keypair.generate();
-    const fakeTransaction = anchor.web3.Keypair.generate();
 
     // const patronBalanceInitially = await anchor
     //   .getProvider()
     //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
 
-    /*
-      transaction: Pubkey, 
-      recipient: Pubkey, 
-      email: String, 
-      amount: u64,
-      expiration_hours: u16
-    */
     const tx = await program.rpc.createReceipt(
-      fakeTransaction.publicKey,
-      newProvider.wallet.publicKey,
       EMAIL,
       TEST_AMOUNT,
       EXP_HOURS,
@@ -102,12 +92,12 @@ describe('flobrij', () => {
     assert.equal(receiptAccount.email, EMAIL);
     assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
     assert.equal(receiptAccount.expirationHours, EXP_HOURS);
+    assert.equal(receiptAccount.recipient, newProvider.wallet.publicKey.toString());
   });
 
   it('Create a receipt as a different user', async () => {
     const receipt = anchor.web3.Keypair.generate();
     const fakeRecipient = anchor.web3.Keypair.generate();
-    const fakeTransaction = anchor.web3.Keypair.generate();
     const fakeUser = anchor.web3.Keypair.generate();
     const signature = await program.provider.connection.requestAirdrop(
       fakeUser.publicKey,
@@ -122,8 +112,6 @@ describe('flobrij', () => {
       expiration_hours: u16
     */
     const tx = await program.rpc.createReceipt(
-      fakeTransaction.publicKey,
-      fakeRecipient.publicKey,
       EMAIL,
       TEST_AMOUNT,
       EXP_HOURS,
