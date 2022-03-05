@@ -11,14 +11,14 @@ describe('flobrij', () => {
   const EMAIL = 'test@test.com';
   const TEST_AMOUNT = new anchor.BN(5000);
   const EXP_HOURS = 8760;
-  const TEST_CREATOR = anchor.web3.Keypair.generate();
+  const TEST_RECIPIENT = anchor.web3.Keypair.generate();
   const AIRDROP_AMOUNT = 1000000000;
 
   it('should pay creator and create a receipt for patron', async () => {
     // create new wallet for Creator
     const newProvider = new anchor.Provider(
       anchor.getProvider().connection,
-      new anchor.Wallet(TEST_CREATOR),
+      new anchor.Wallet(TEST_RECIPIENT),
       {}
     );
 
@@ -35,33 +35,19 @@ describe('flobrij', () => {
 
     const receipt = anchor.web3.Keypair.generate();
 
-    // const patronBalanceInitially = await anchor
-    //   .getProvider()
-    //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
-
     const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
       accounts: {
-        // Accounts here...
         receipt: receipt.publicKey,
-        creator: newProvider.wallet.publicKey,
         payer: program.provider.wallet.publicKey,
+        recipient: newProvider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
-      signers: [
-        // Key pairs of signers here...
-        receipt,
-        TEST_CREATOR,
-      ],
+      signers: [receipt],
     });
 
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey
     );
-
-    // const patronBalanceAfterPayment = await anchor
-    //   .getProvider()
-    //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
-    // console.log('patron balance after payment', patronBalanceAfterPayment);
 
     const creatorBalanceAfterPayment = await newProvider.connection.getBalance(
       newProvider.wallet.publicKey
@@ -74,16 +60,6 @@ describe('flobrij', () => {
       'Creator received their crypto'
     );
 
-    // TODO: patronBalanceInitially is way to big for anchor.bn() which has limit of 0x20000000000000
-    // and patronBalanceInitially is 0x6F05B59D3B20000 (500000000000000000)
-    // Also, is this function to get fees? await anchor.getProvider().connection.getMinimumBalanceForRentExemption(program.account.receipt.size)
-    // Ideally we subtract balance initially, fees and TEST_AMOUNT to double-check decrement of Patron worked
-
-    // assert.ok(
-    //   new anchor.BN(patronBalanceInitially).gt(
-    //     TEST_AMOUNT.add(new anchor.BN(patronBalanceAfterPayment))
-    //   )
-    // );
     assert.equal(receiptAccount.email, EMAIL);
     assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
     assert.equal(receiptAccount.expirationHours, EXP_HOURS);
@@ -105,17 +81,12 @@ describe('flobrij', () => {
 
     const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
       accounts: {
-        // Accounts here...
         receipt: receipt.publicKey,
-        creator: fakeUser.publicKey,
         payer: fakeUser.publicKey,
+        recipient: fakeUser.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
-      signers: [
-        // Key pairs of signers here...
-        receipt,
-        fakeUser,
-      ],
+      signers: [receipt, fakeUser],
     });
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey
@@ -128,7 +99,7 @@ describe('flobrij', () => {
   });
 
   it('Query for receipts by payee', async () => {
-    const recipientPublicKey = TEST_CREATOR.publicKey;
+    const recipientPublicKey = TEST_RECIPIENT.publicKey;
     const receiptAccounts = await program.account.receipt.all([
       {
         memcmp: {
@@ -162,27 +133,15 @@ describe('flobrij', () => {
     );
     await program.provider.connection.confirmTransaction(signature);
 
-    const tx = await program.rpc.createReceipt(
-      // fakeTransaction.publicKey,
-      // fakeRecipient,
-      EMAIL,
-      TEST_AMOUNT,
-      EXP_HOURS,
-      {
-        accounts: {
-          // Accounts here...
-          receipt: receipt.publicKey,
-          creator: fakeUser.publicKey,
-          payer: fakeUser.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-        signers: [
-          // Key pairs of signers here...
-          receipt,
-          fakeUser,
-        ],
-      }
-    );
+    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+      accounts: {
+        receipt: receipt.publicKey,
+        payer: fakeUser.publicKey,
+        recipient: fakeUser.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [receipt, fakeUser],
+    });
 
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey

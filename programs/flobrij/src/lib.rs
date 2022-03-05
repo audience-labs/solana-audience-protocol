@@ -20,28 +20,25 @@ pub mod flobrij {
         receipt.payer = *payer.key; 
         receipt.timestamp = clock.unix_timestamp; 
 
-        // TODO: Get patron_payment_transaction information, make sure it's a valid patron_payment_transaction
-        //      - Make sure the payer and the recipient match the patron_payment_transaction as well as the amount
-
         if email.chars().count() > 254 {
             return Err(ErrorCode::EmailTooLong.into())
         }
 
-        // first Patron should pay Creator
+        // first Patron should pay Recipient ("Creator")
         let ix = system_instruction::transfer(
             &ctx.accounts.payer.key(),
-            &ctx.accounts.creator.key(),
+            &ctx.accounts.recipient.key(),
             amount,
         );
         anchor_lang::solana_program::program::invoke(
             &ix,
             &[
                 ctx.accounts.payer.to_account_info(),
-                ctx.accounts.creator.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
             ],
-        ).unwrap_or_else(|err| println!("{:?}", err));
+        ).unwrap();
 
-        receipt.recipient = ctx.accounts.creator.key(); //  .creator.pub(); //creator; 
+        receipt.recipient = ctx.accounts.recipient.key();
         receipt.email = email; 
         receipt.amount = amount; 
         receipt.expiration_hours = expiration_hours; 
@@ -55,9 +52,9 @@ pub struct CreateReceipt<'info> {
     #[account(init, payer = payer, space = Receipt::LEN)]
     pub receipt: Account<'info, Receipt>, 
     #[account(mut)]
-    pub creator: Signer<'info>,
-    #[account(mut)]
     pub payer: Signer<'info>, 
+    #[account(mut)]
+    pub recipient: UncheckedAccount<'info>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>
 }
