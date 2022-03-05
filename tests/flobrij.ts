@@ -14,7 +14,7 @@ describe('flobrij', () => {
   const TEST_CREATOR = anchor.web3.Keypair.generate();
   const AIRDROP_AMOUNT = 1000000000;
 
-  it.only('should pay creator and create a receipt for patron', async () => {
+  it('should pay creator and create a receipt for patron', async () => {
     // create new wallet for Creator
     const newProvider = new anchor.Provider(
       anchor.getProvider().connection,
@@ -39,25 +39,20 @@ describe('flobrij', () => {
     //   .getProvider()
     //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
 
-    const tx = await program.rpc.createReceipt(
-      EMAIL,
-      TEST_AMOUNT,
-      EXP_HOURS,
-      {
-        accounts: {
-          // Accounts here...
-          receipt: receipt.publicKey,
-          creator: newProvider.wallet.publicKey,
-          payer: program.provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-        signers: [
-          // Key pairs of signers here...
-          receipt,
-          TEST_CREATOR,
-        ],
-      }
-    );
+    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+      accounts: {
+        // Accounts here...
+        receipt: receipt.publicKey,
+        creator: newProvider.wallet.publicKey,
+        payer: program.provider.wallet.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [
+        // Key pairs of signers here...
+        receipt,
+        TEST_CREATOR,
+      ],
+    });
 
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey
@@ -92,7 +87,10 @@ describe('flobrij', () => {
     assert.equal(receiptAccount.email, EMAIL);
     assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
     assert.equal(receiptAccount.expirationHours, EXP_HOURS);
-    assert.equal(receiptAccount.recipient, newProvider.wallet.publicKey.toString());
+    assert.equal(
+      receiptAccount.recipient,
+      newProvider.wallet.publicKey.toString()
+    );
   });
 
   it('Create a receipt as a different user', async () => {
@@ -104,35 +102,29 @@ describe('flobrij', () => {
       AIRDROP_AMOUNT
     );
     await program.provider.connection.confirmTransaction(signature);
-    /*
-      transaction: Pubkey,
-      recipient: Pubkey,
-      email: String,
-      amount: u64,
-      expiration_hours: u16
-    */
-    const tx = await program.rpc.createReceipt(
-      EMAIL,
-      TEST_AMOUNT,
-      EXP_HOURS,
-      {
-        accounts: {
-          // Accounts here...
-          receipt: receipt.publicKey,
-          payer: fakeUser.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        },
-        signers: [
-          // Key pairs of signers here...
-          receipt,
-          fakeUser,
-        ],
-      }
-    );
+
+    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+      accounts: {
+        // Accounts here...
+        receipt: receipt.publicKey,
+        creator: fakeUser.publicKey,
+        payer: fakeUser.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [
+        // Key pairs of signers here...
+        receipt,
+        fakeUser,
+      ],
+    });
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey
     );
-    console.log(receiptAccount);
+
+    assert.equal(receiptAccount.email, EMAIL);
+    assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
+    assert.equal(receiptAccount.expirationHours, EXP_HOURS);
+    assert.equal(receiptAccount.recipient, fakeUser.publicKey.toString());
   });
 
   it('Query for receipts by payee', async () => {
@@ -163,7 +155,6 @@ describe('flobrij', () => {
       'EjVxdTp7NXqUtqSACXeMojnTUwkFhr1wd5rxmDSLrstd'
     );
 
-    const fakeTransaction = anchor.web3.Keypair.generate();
     const fakeUser = anchor.web3.Keypair.generate();
     const signature = await program.provider.connection.requestAirdrop(
       fakeUser.publicKey,
@@ -172,8 +163,8 @@ describe('flobrij', () => {
     await program.provider.connection.confirmTransaction(signature);
 
     const tx = await program.rpc.createReceipt(
-      fakeTransaction.publicKey,
-      fakeRecipient,
+      // fakeTransaction.publicKey,
+      // fakeRecipient,
       EMAIL,
       TEST_AMOUNT,
       EXP_HOURS,
@@ -181,6 +172,7 @@ describe('flobrij', () => {
         accounts: {
           // Accounts here...
           receipt: receipt.publicKey,
+          creator: fakeUser.publicKey,
           payer: fakeUser.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
@@ -191,11 +183,10 @@ describe('flobrij', () => {
         ],
       }
     );
-    console.log('Your transaction signature', tx);
+
     const receiptAccount = await program.account.receipt.fetch(
       receipt.publicKey
     );
-    console.log(receiptAccount);
 
     const receiptAccounts = await program.account.receipt.all([
       {
@@ -205,8 +196,8 @@ describe('flobrij', () => {
         },
       },
     ]);
-    console.log("\n\n This is the account that's interesting: ");
-    console.log(receiptAccounts);
+
+    // This is the account that's interesting:
     assert.ok(
       receiptAccounts.every((recipientAccounts) => {
         return (
