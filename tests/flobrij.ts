@@ -9,24 +9,47 @@ describe('flobrij', () => {
   const program = anchor.workspace.Flobrij as Program<Flobrij>;
 
   const EMAIL = 'test@test.com';
-  const TEST_AMOUNT = 5000;
+  const TEST_AMOUNT = new anchor.BN(5000);
   const EXP_HOURS = 8760;
   const TEST_CREATOR = anchor.web3.Keypair.generate();
   const AIRDROP_AMOUNT = 1000000000;
 
-  it('Create a receipt', async () => {
+  it.only('should pay creator and create a receipt for patron', async () => {
+    // create new wallet for Creator
+    const newProvider = new anchor.Provider(
+      anchor.getProvider().connection,
+      new anchor.Wallet(TEST_CREATOR),
+      {}
+    );
+
+    // add some SOL
+    const signature = await newProvider.connection.requestAirdrop(
+      newProvider.wallet.publicKey,
+      AIRDROP_AMOUNT
+    );
+    await newProvider.connection.confirmTransaction(signature);
+
+    const creatorBalanceInitially = await newProvider.connection.getBalance(
+      newProvider.wallet.publicKey
+    );
+
     const receipt = anchor.web3.Keypair.generate();
     const fakeTransaction = anchor.web3.Keypair.generate();
+
+    // const patronBalanceInitially = await anchor
+    //   .getProvider()
+    //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
+
     /*
       transaction: Pubkey, 
       recipient: Pubkey, 
       email: String, 
-      amount: u32, 
+      amount: u64,
       expiration_hours: u16
     */
     const tx = await program.rpc.createReceipt(
       fakeTransaction.publicKey,
-      TEST_CREATOR.publicKey,
+      newProvider.wallet.publicKey,
       EMAIL,
       TEST_AMOUNT,
       EXP_HOURS,
@@ -34,12 +57,14 @@ describe('flobrij', () => {
         accounts: {
           // Accounts here...
           receipt: receipt.publicKey,
+          creator: newProvider.wallet.publicKey,
           payer: program.provider.wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
         signers: [
           // Key pairs of signers here...
           receipt,
+          TEST_CREATOR,
         ],
       }
     );
@@ -48,12 +73,34 @@ describe('flobrij', () => {
       receipt.publicKey
     );
 
-    console.log(receiptAccount);
+    // const patronBalanceAfterPayment = await anchor
+    //   .getProvider()
+    //   .connection.getBalance(anchor.getProvider().wallet.publicKey);
+    // console.log('patron balance after payment', patronBalanceAfterPayment);
 
-    // assert.equal(program.provider.wallet.publicKey.toString(), TEST_CREATOR.secretKey.toString());
+    const creatorBalanceAfterPayment = await newProvider.connection.getBalance(
+      newProvider.wallet.publicKey
+    );
 
+    assert.ok(
+      new anchor.BN(creatorBalanceInitially).eq(
+        new anchor.BN(creatorBalanceAfterPayment).sub(TEST_AMOUNT)
+      ),
+      'Creator received their crypto'
+    );
+
+    // TODO: patronBalanceInitially is way to big for anchor.bn() which has limit of 0x20000000000000
+    // and patronBalanceInitially is 0x6F05B59D3B20000 (500000000000000000)
+    // Also, is this function to get fees? await anchor.getProvider().connection.getMinimumBalanceForRentExemption(program.account.receipt.size)
+    // Ideally we subtract balance initially, fees and TEST_AMOUNT to double-check decrement of Patron worked
+
+    // assert.ok(
+    //   new anchor.BN(patronBalanceInitially).gt(
+    //     TEST_AMOUNT.add(new anchor.BN(patronBalanceAfterPayment))
+    //   )
+    // );
     assert.equal(receiptAccount.email, EMAIL);
-    assert.equal(receiptAccount.amount, TEST_AMOUNT);
+    assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
     assert.equal(receiptAccount.expirationHours, EXP_HOURS);
   });
 
@@ -71,7 +118,7 @@ describe('flobrij', () => {
       transaction: Pubkey,
       recipient: Pubkey,
       email: String,
-      amount: u32,
+      amount: u64,
       expiration_hours: u16
     */
     const tx = await program.rpc.createReceipt(
