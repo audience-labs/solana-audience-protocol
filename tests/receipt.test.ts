@@ -3,7 +3,7 @@ import { Program } from '@project-serum/anchor';
 import { Flobrij } from '../target/types/flobrij';
 import * as assert from 'assert';
 
-describe('flobrij', () => {
+describe('Receipt', () => {
   anchor.setProvider(anchor.Provider.env());
 
   const program = anchor.workspace.Flobrij as Program<Flobrij>;

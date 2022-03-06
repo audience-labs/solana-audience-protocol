@@ -46,6 +46,38 @@ pub mod flobrij {
 
         Ok(())
     }
+
+    pub fn create_supportlevel(
+        ctx: Context<CreateSupportLevel>,
+        title: String,
+        monthly_price: u64,
+        description: String,
+        benefit: String,
+    ) -> ProgramResult {
+        let supportlevel: &mut Account<SupportLevel> = &mut ctx.accounts.supportlevel;
+        let payer: &Signer = &ctx.accounts.payer;
+
+        supportlevel.payer = *payer.key;
+
+        if title.chars().count() > 50 {
+            return Err(ErrorCode::TitleTooLong.into());
+        }
+
+        if description.chars().count() > 254 {
+            return Err(ErrorCode::DescriptionTooLong.into());
+        }
+
+        if benefit.chars().count() > 100 {
+            return Err(ErrorCode::BenefitTooLong.into());
+        }
+
+        supportlevel.title = title;
+        supportlevel.monthly_price = monthly_price;
+        supportlevel.description = description;
+        supportlevel.benefit = benefit;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -92,8 +124,59 @@ impl Receipt {
         + AMOUNT_LENGTH;
 }
 
+//
+// SUPPORT LEVEL
+//
+
+#[derive(Accounts)]
+pub struct CreateSupportLevel<'info> {
+    #[account(init, payer = payer, space = SupportLevel::LEN)]
+    pub supportlevel: Account<'info, SupportLevel>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(address = system_program::ID)]
+    pub system_program: AccountInfo<'info>,
+}
+
+#[account]
+pub struct SupportLevel {
+    pub payer: Pubkey,
+    pub title: String,
+    pub monthly_price: u64,
+    pub description: String,
+    pub benefit: String,
+}
+
+const MAX_SUPPORTLEVEL_PAYER_PUBLIC_KEY_LENGTH: usize = 32;
+const MAX_SUPPORTLEVEL_MONTHLY_PRICE_LENGTH: usize = 8;
+const MAX_SUPPORTLEVEL_TITLE_LENGTH: usize = 50 * 4; // 50 chars max.
+const MAX_SUPPORTLEVEL_DESCRIPTION_LENGTH: usize = 254 * 4; // 254 chars max.
+const MAX_SUPPORTLEVEL_BENEFIT_LENGTH: usize = 100 * 4; // 100 chars max.
+
+impl SupportLevel {
+    const LEN: usize = DISCRIMINATOR_LENGTH
+        + MAX_SUPPORTLEVEL_PAYER_PUBLIC_KEY_LENGTH
+        + STRING_LENGTH_PREFIX
+        + MAX_SUPPORTLEVEL_TITLE_LENGTH
+        + MAX_SUPPORTLEVEL_MONTHLY_PRICE_LENGTH
+        + STRING_LENGTH_PREFIX
+        + MAX_SUPPORTLEVEL_DESCRIPTION_LENGTH
+        + STRING_LENGTH_PREFIX
+        + MAX_SUPPORTLEVEL_BENEFIT_LENGTH;
+}
+
+//
+// Error message
+//
+
 #[error]
 pub enum ErrorCode {
     #[msg("The provided email should be 254 characters long maximum.")]
     EmailTooLong,
+    #[msg("The provided title should be 50 characters long maximum.")]
+    TitleTooLong,
+    #[msg("The provided description should be 254 characters long maximum.")]
+    DescriptionTooLong,
+    #[msg("The provided benefit should be 100 characters long maximum.")]
+    BenefitTooLong,
 }
