@@ -3,7 +3,7 @@
         "@project-serum/anchor": "^0.21.0"
     },
     "scripts": {
-        "style": "prettier --write tests"
+        "style": "prettier --write tests && rustfmt programs/flobrij/src/lib.rs"
     },
     "devDependencies": {
         "@types/mocha": "^9.0.0",

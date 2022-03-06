@@ -1,27 +1,27 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_lang::solana_program::system_instruction;
-
+use anchor_lang::solana_program::system_program;
 
 declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
 
 #[program]
 pub mod flobrij {
     use super::*;
-    pub fn create_receipt(ctx: Context<CreateReceipt>, 
+    pub fn create_receipt(
+        ctx: Context<CreateReceipt>,
         email: String,
         amount: u64,
-        expiration_hours: u16
+        expiration_hours: u16,
     ) -> ProgramResult {
-        let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt; 
-        let payer: &Signer = &ctx.accounts.payer; 
+        let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt;
+        let payer: &Signer = &ctx.accounts.payer;
         let clock: Clock = Clock::get().unwrap();
 
-        receipt.payer = *payer.key; 
-        receipt.timestamp = clock.unix_timestamp; 
+        receipt.payer = *payer.key;
+        receipt.timestamp = clock.unix_timestamp;
 
         if email.chars().count() > 254 {
-            return Err(ErrorCode::EmailTooLong.into())
+            return Err(ErrorCode::EmailTooLong.into());
         }
 
         // first Patron should pay Recipient ("Creator")
@@ -36,12 +36,13 @@ pub mod flobrij {
                 ctx.accounts.payer.to_account_info(),
                 ctx.accounts.recipient.to_account_info(),
             ],
-        ).unwrap();
+        )
+        .unwrap();
 
         receipt.recipient = ctx.accounts.recipient.key();
-        receipt.email = email; 
-        receipt.amount = amount; 
-        receipt.expiration_hours = expiration_hours; 
+        receipt.email = email;
+        receipt.amount = amount;
+        receipt.expiration_hours = expiration_hours;
 
         Ok(())
     }
@@ -50,22 +51,22 @@ pub mod flobrij {
 #[derive(Accounts)]
 pub struct CreateReceipt<'info> {
     #[account(init, payer = payer, space = Receipt::LEN)]
-    pub receipt: Account<'info, Receipt>, 
+    pub receipt: Account<'info, Receipt>,
     #[account(mut)]
-    pub payer: Signer<'info>, 
+    pub payer: Signer<'info>,
     #[account(mut)]
     pub recipient: UncheckedAccount<'info>,
     #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>
+    pub system_program: AccountInfo<'info>,
 }
 
 #[account]
 pub struct Receipt {
-    pub payer: Pubkey, 
-    pub recipient: Pubkey, 
-    pub timestamp: i64, 
-    pub expiration_hours: u16, 
-    pub email: String, 
+    pub payer: Pubkey,
+    pub recipient: Pubkey,
+    pub timestamp: i64,
+    pub expiration_hours: u16,
+    pub email: String,
     pub amount: u64,
 }
 
@@ -82,12 +83,13 @@ const AMOUNT_LENGTH: usize = 8;
 
 impl Receipt {
     const LEN: usize = DISCRIMINATOR_LENGTH
-    + PAYER_PUBLIC_KEY_LENGTH
-    + RECIPIENT_PUBLIC_KEY_LENGTH
-    + TIMESTAMP_LENGTH
-    + EXPIRATION_HOURS_LENGTH
-    + STRING_LENGTH_PREFIX + MAX_EMAIL_LENGTH
-    + AMOUNT_LENGTH; 
+        + PAYER_PUBLIC_KEY_LENGTH
+        + RECIPIENT_PUBLIC_KEY_LENGTH
+        + TIMESTAMP_LENGTH
+        + EXPIRATION_HOURS_LENGTH
+        + STRING_LENGTH_PREFIX
+        + MAX_EMAIL_LENGTH
+        + AMOUNT_LENGTH;
 }
 
 #[error]
