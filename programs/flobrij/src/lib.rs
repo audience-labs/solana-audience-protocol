@@ -78,6 +78,35 @@ pub mod flobrij {
 
         Ok(())
     }
+
+    pub fn set_supportlevel(
+        ctx: Context<SetSupportLevel>,
+        title: String,
+        monthly_price: u64,
+        description: String,
+        benefit: String,
+    ) -> ProgramResult {
+        let supportlevel: &mut Account<SupportLevel> = &mut ctx.accounts.supportlevel;
+
+        if title.chars().count() > 50 {
+            return Err(ErrorCode::TitleTooLong.into());
+        }
+
+        if description.chars().count() > 254 {
+            return Err(ErrorCode::DescriptionTooLong.into());
+        }
+
+        if benefit.chars().count() > 100 {
+            return Err(ErrorCode::BenefitTooLong.into());
+        }
+
+        supportlevel.title = title;
+        supportlevel.monthly_price = monthly_price;
+        supportlevel.description = description;
+        supportlevel.benefit = benefit;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -136,6 +165,12 @@ pub struct CreateSupportLevel<'info> {
     pub payer: Signer<'info>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct SetSupportLevel<'info> {
+    #[account(mut)]
+    pub supportlevel: Account<'info, SupportLevel>,
 }
 
 #[account]
