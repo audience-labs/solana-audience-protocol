@@ -29,10 +29,14 @@ Copy IDL to front-end
 
     yarn install
 
+**Make sure you don't have solana-test-validator running before running tests**
+
+    anchor test     # which runs validator and tests in one go
+
 ## Run code formatter on tests
 
     yarn style
 
-**Make sure you don't have solana-test-validator running before running tests**
+## How do I debug Rust by logging variables?
 
-    anchor test     # which runs validator and tests in one go
+I created a gist with more info: https://gist.github.com/briangershon/89dfe197941c0abbd26db991ce350ce5

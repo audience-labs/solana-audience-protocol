@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use anchor_lang::solana_program::system_instruction;
 
 
 declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
@@ -8,18 +9,10 @@ declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
 pub mod flobrij {
     use super::*;
     pub fn create_receipt(ctx: Context<CreateReceipt>, 
-        patron_payment_transaction: Pubkey, 
-        creator: Pubkey, 
-        email: String, 
-        amount: u32, 
+        email: String,
+        amount: u64,
         expiration_hours: u16
     ) -> ProgramResult {
-
-        msg!("Some variable: {:?}", patron_payment_transaction);
-        /*
-        * TODO: 
-        *  - We should look up the patron_payment_transaction and pull it's information instead of just taking it from the call. Figure this out later.
-        */ 
         let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt; 
         let payer: &Signer = &ctx.accounts.payer; 
         let clock: Clock = Clock::get().unwrap();
@@ -27,15 +20,25 @@ pub mod flobrij {
         receipt.payer = *payer.key; 
         receipt.timestamp = clock.unix_timestamp; 
 
-        // TODO: Get patron_payment_transaction information, make sure it's a valid patron_payment_transaction
-        //      - Make sure the payer and the recipient match the patron_payment_transaction as well as the amount
-
         if email.chars().count() > 254 {
             return Err(ErrorCode::EmailTooLong.into())
         }
 
-        receipt.transaction = patron_payment_transaction; 
-        receipt.recipient = creator; 
+        // first Patron should pay Recipient ("Creator")
+        let ix = system_instruction::transfer(
+            &ctx.accounts.payer.key(),
+            &ctx.accounts.recipient.key(),
+            amount,
+        );
+        anchor_lang::solana_program::program::invoke(
+            &ix,
+            &[
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+            ],
+        ).unwrap();
+
+        receipt.recipient = ctx.accounts.recipient.key();
         receipt.email = email; 
         receipt.amount = amount; 
         receipt.expiration_hours = expiration_hours; 
@@ -50,6 +53,8 @@ pub struct CreateReceipt<'info> {
     pub receipt: Account<'info, Receipt>, 
     #[account(mut)]
     pub payer: Signer<'info>, 
+    #[account(mut)]
+    pub recipient: UncheckedAccount<'info>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>
 }
@@ -61,8 +66,7 @@ pub struct Receipt {
     pub timestamp: i64, 
     pub expiration_hours: u16, 
     pub email: String, 
-    pub amount: u32, 
-    pub transaction: Pubkey, 
+    pub amount: u64,
 }
 
 // Sizing consts
@@ -74,8 +78,7 @@ const EXPIRATION_HOURS_LENGTH: usize = 2;
 // Email is max 254 characters
 const STRING_LENGTH_PREFIX: usize = 4; // Stores the size of the string.
 const MAX_EMAIL_LENGTH: usize = 254 * 4; // 254 chars max.
-const AMOUNT_LENGTH: usize = 4; 
-const TRANSACTION_PUBLIC_KEY_LENGTH: usize = 32;
+const AMOUNT_LENGTH: usize = 8;
 
 impl Receipt {
     const LEN: usize = DISCRIMINATOR_LENGTH
@@ -84,8 +87,7 @@ impl Receipt {
     + TIMESTAMP_LENGTH
     + EXPIRATION_HOURS_LENGTH
     + STRING_LENGTH_PREFIX + MAX_EMAIL_LENGTH
-    + AMOUNT_LENGTH
-    + TRANSACTION_PUBLIC_KEY_LENGTH; 
+    + AMOUNT_LENGTH; 
 }
 
 #[error]
