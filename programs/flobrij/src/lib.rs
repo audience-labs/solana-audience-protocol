@@ -50,7 +50,7 @@ pub mod flobrij {
     pub fn create_supportlevel(
         ctx: Context<CreateSupportLevel>,
         title: String,
-        monthly_price: u64,
+        price: u64,
         description: String,
         benefit: String,
     ) -> ProgramResult {
@@ -72,7 +72,7 @@ pub mod flobrij {
         }
 
         supportlevel.title = title;
-        supportlevel.monthly_price = monthly_price;
+        supportlevel.price = price;
         supportlevel.description = description;
         supportlevel.benefit = benefit;
 
@@ -82,7 +82,7 @@ pub mod flobrij {
     pub fn set_supportlevel(
         ctx: Context<SetSupportLevel>,
         title: String,
-        monthly_price: u64,
+        price: u64,
         description: String,
         benefit: String,
     ) -> ProgramResult {
@@ -101,10 +101,14 @@ pub mod flobrij {
         }
 
         supportlevel.title = title;
-        supportlevel.monthly_price = monthly_price;
+        supportlevel.price = price;
         supportlevel.description = description;
         supportlevel.benefit = benefit;
 
+        Ok(())
+    }
+
+    pub fn delete_supportlevel(_ctx: Context<DeleteSupportLevel>) -> ProgramResult {
         Ok(())
     }
 }
@@ -173,17 +177,24 @@ pub struct SetSupportLevel<'info> {
     pub supportlevel: Account<'info, SupportLevel>,
 }
 
+#[derive(Accounts)]
+pub struct DeleteSupportLevel<'info> {
+    #[account(mut, close = sol_dest)]
+    pub supportlevel: Account<'info, SupportLevel>,
+    sol_dest: AccountInfo<'info>,
+}
+
 #[account]
 pub struct SupportLevel {
     pub payer: Pubkey,
     pub title: String,
-    pub monthly_price: u64,
+    pub price: u64,
     pub description: String,
     pub benefit: String,
 }
 
 const MAX_SUPPORTLEVEL_PAYER_PUBLIC_KEY_LENGTH: usize = 32;
-const MAX_SUPPORTLEVEL_MONTHLY_PRICE_LENGTH: usize = 8;
+const MAX_SUPPORTLEVEL_PRICE_LENGTH: usize = 8;
 const MAX_SUPPORTLEVEL_TITLE_LENGTH: usize = 50 * 4; // 50 chars max.
 const MAX_SUPPORTLEVEL_DESCRIPTION_LENGTH: usize = 254 * 4; // 254 chars max.
 const MAX_SUPPORTLEVEL_BENEFIT_LENGTH: usize = 100 * 4; // 100 chars max.
@@ -193,7 +204,7 @@ impl SupportLevel {
         + MAX_SUPPORTLEVEL_PAYER_PUBLIC_KEY_LENGTH
         + STRING_LENGTH_PREFIX
         + MAX_SUPPORTLEVEL_TITLE_LENGTH
-        + MAX_SUPPORTLEVEL_MONTHLY_PRICE_LENGTH
+        + MAX_SUPPORTLEVEL_PRICE_LENGTH
         + STRING_LENGTH_PREFIX
         + MAX_SUPPORTLEVEL_DESCRIPTION_LENGTH
         + STRING_LENGTH_PREFIX
