@@ -129,6 +129,7 @@ pub struct CreateReceipt<'info> {
 pub struct Receipt {
     pub payer: Pubkey,
     pub recipient: Pubkey,
+    // pub supportlevel: Pubkey,
     pub timestamp: i64,
     pub expiration_hours: u16,
     pub email: String,
@@ -175,6 +176,8 @@ pub struct CreateSupportLevel<'info> {
 pub struct SetSupportLevel<'info> {
     #[account(mut)]
     pub supportlevel: Account<'info, SupportLevel>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
 }
 
 #[derive(Accounts)]
@@ -191,6 +194,7 @@ pub struct SupportLevel {
     pub price: u64,
     pub description: String,
     pub benefit: String,
+    // pub expiration_hours: u16,
 }
 
 const MAX_SUPPORTLEVEL_PAYER_PUBLIC_KEY_LENGTH: usize = 32;

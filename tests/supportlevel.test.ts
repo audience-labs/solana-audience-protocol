@@ -67,6 +67,7 @@ describe('SupportLevel', () => {
         {
           accounts: {
             supportlevel: supportlevel.publicKey,
+            payer: program.provider.wallet.publicKey,
           },
           signers: [],
         }
@@ -77,6 +78,25 @@ describe('SupportLevel', () => {
       );
 
       assert.equal(account.title, 'Demigods edited');
+    });
+
+    it('no one else should be able to edit', async function () {
+      const anotherUser = anchor.web3.Keypair.generate();
+      await assert.rejects(async function () {
+        await program.rpc.setSupportlevel(
+          TEST_TITLE + ' edited by someone else',
+          TEST_PRICE,
+          TEST_DESCRIPTION,
+          TEST_BENEFIT,
+          {
+            accounts: {
+              supportlevel: supportlevel.publicKey,
+              payer: anotherUser.publicKey,
+            },
+            signers: [],
+          }
+        );
+      });
     });
 
     it('can delete my support level', async function () {
@@ -105,15 +125,11 @@ describe('SupportLevel', () => {
         signers: [],
       });
 
-      try {
+      await assert.rejects(async function () {
         const account = await program.account.supportLevel.fetch(
           level.publicKey
         );
-      } catch (e) {
-        return;
-      }
-
-      throw "test shouldn't reach here since account is deleted";
+      });
     });
 
     it('can see list of all my support levels', async function () {
@@ -142,7 +158,6 @@ describe('SupportLevel', () => {
       assert.equal(account2.title, 'Demigods2');
 
       // retrieve full list and filter by owner
-
       const creator = program.provider.wallet.publicKey.toString();
 
       const supportlevelAccounts = await program.account.supportLevel.all([
@@ -165,12 +180,66 @@ describe('SupportLevel', () => {
         signers: [],
       });
     });
-    it(
-      'are only ones that can update (try to change with a different publicKey)'
-    );
-    it('sees an error if email too long');
-    it('sees an error if description too long');
-    it('sees an error if benefit too long');
+
+    it('sees an error if title too long', async function () {
+      const supportlevel2 = anchor.web3.Keypair.generate();
+      await assert.rejects(async function () {
+        await program.rpc.createSupportlevel(
+          'T'.repeat(51), // too long
+          TEST_PRICE,
+          TEST_DESCRIPTION,
+          TEST_BENEFIT,
+          {
+            accounts: {
+              supportlevel: supportlevel2.publicKey,
+              payer: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+            signers: [supportlevel2],
+          }
+        );
+      });
+    });
+
+    it('sees an error if description too long', async function () {
+      const supportlevel2 = anchor.web3.Keypair.generate();
+      await assert.rejects(async function () {
+        await program.rpc.createSupportlevel(
+          TEST_TITLE,
+          TEST_PRICE,
+          'T'.repeat(255), // too long
+          TEST_BENEFIT,
+          {
+            accounts: {
+              supportlevel: supportlevel2.publicKey,
+              payer: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+            signers: [supportlevel2],
+          }
+        );
+      });
+    });
+
+    it('sees an error if benefit too long', async function () {
+      const supportlevel2 = anchor.web3.Keypair.generate();
+      await assert.rejects(async function () {
+        await program.rpc.createSupportlevel(
+          TEST_TITLE,
+          TEST_PRICE,
+          TEST_DESCRIPTION,
+          'T'.repeat(101), // too long
+          {
+            accounts: {
+              supportlevel: supportlevel2.publicKey,
+              payer: program.provider.wallet.publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            },
+            signers: [supportlevel2],
+          }
+        );
+      });
+    });
   });
 
   describe('as Patron', function () {
