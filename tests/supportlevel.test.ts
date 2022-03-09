@@ -241,10 +241,4 @@ describe('SupportLevel', () => {
       });
     });
   });
-
-  describe('as Patron', function () {
-    it('can see list of all available support levels');
-    it('can pick and pay for a support level');
-    it('can receive benefit of that subscription');
-  });
 });

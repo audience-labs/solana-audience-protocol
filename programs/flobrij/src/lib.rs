@@ -10,10 +10,11 @@ pub mod flobrij {
     pub fn create_receipt(
         ctx: Context<CreateReceipt>,
         email: String,
-        amount: u64,
         expiration_hours: u16,
+        // supportlevel: Pubkey,
     ) -> ProgramResult {
         let receipt: &mut Account<Receipt> = &mut ctx.accounts.receipt;
+        let supportlevel: &mut Account<SupportLevel> = &mut ctx.accounts.supportlevel;
         let payer: &Signer = &ctx.accounts.payer;
         let clock: Clock = Clock::get().unwrap();
 
@@ -23,6 +24,10 @@ pub mod flobrij {
         if email.chars().count() > 254 {
             return Err(ErrorCode::EmailTooLong.into());
         }
+
+        // TODO: Ensure there is a supportlevel choosen
+
+        let amount = supportlevel.price;
 
         // first Patron should pay Recipient ("Creator")
         let ix = system_instruction::transfer(
@@ -40,6 +45,7 @@ pub mod flobrij {
         .unwrap();
 
         receipt.recipient = ctx.accounts.recipient.key();
+        receipt.supportlevel = ctx.accounts.supportlevel.key();
         receipt.email = email;
         receipt.amount = amount;
         receipt.expiration_hours = expiration_hours;
@@ -121,6 +127,8 @@ pub struct CreateReceipt<'info> {
     pub payer: Signer<'info>,
     #[account(mut)]
     pub recipient: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub supportlevel: Account<'info, SupportLevel>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
@@ -129,7 +137,7 @@ pub struct CreateReceipt<'info> {
 pub struct Receipt {
     pub payer: Pubkey,
     pub recipient: Pubkey,
-    // pub supportlevel: Pubkey,
+    pub supportlevel: Pubkey,
     pub timestamp: i64,
     pub expiration_hours: u16,
     pub email: String,
