@@ -3,16 +3,51 @@ import { Program } from '@project-serum/anchor';
 import { Flobrij } from '../target/types/flobrij';
 import * as assert from 'assert';
 
-describe('flobrij', () => {
+describe('PatronReceipt', () => {
   anchor.setProvider(anchor.Provider.env());
 
   const program = anchor.workspace.Flobrij as Program<Flobrij>;
 
   const EMAIL = 'test@test.com';
-  const TEST_AMOUNT = new anchor.BN(5000);
+  const TEST_AMOUNT = new anchor.BN(8000);
   const EXP_HOURS = 8760;
   const TEST_RECIPIENT = anchor.web3.Keypair.generate();
   const AIRDROP_AMOUNT = 1000000000;
+
+  const TEST_TITLE = 'Demigods';
+  const TEST_DESCRIPTION = 'Join the monthly Demigods newsletter';
+  const TEST_BENEFIT = 'Access to all our articles';
+
+  let supportlevel;
+
+  beforeEach(async function () {
+    supportlevel = anchor.web3.Keypair.generate();
+
+    await program.rpc.createSupportlevel(
+      TEST_TITLE,
+      TEST_AMOUNT,
+      TEST_DESCRIPTION,
+      TEST_BENEFIT,
+      {
+        accounts: {
+          supportlevel: supportlevel.publicKey,
+          payer: program.provider.wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+        signers: [supportlevel],
+      }
+    );
+  });
+
+  afterEach(async function () {
+    await program.rpc.deleteSupportlevel({
+      accounts: {
+        supportlevel: supportlevel.publicKey,
+        solDest: program.provider.wallet.publicKey,
+      },
+      signers: [],
+    });
+  });
 
   it('should pay creator and create a receipt for patron', async () => {
     // create new wallet for Creator
@@ -35,11 +70,12 @@ describe('flobrij', () => {
 
     const receipt = anchor.web3.Keypair.generate();
 
-    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+    const tx = await program.rpc.createReceipt(EMAIL, EXP_HOURS, {
       accounts: {
         receipt: receipt.publicKey,
         payer: program.provider.wallet.publicKey,
         recipient: newProvider.wallet.publicKey,
+        supportlevel: supportlevel.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
       signers: [receipt],
@@ -79,11 +115,12 @@ describe('flobrij', () => {
     );
     await program.provider.connection.confirmTransaction(signature);
 
-    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+    const tx = await program.rpc.createReceipt(EMAIL, EXP_HOURS, {
       accounts: {
         receipt: receipt.publicKey,
         payer: fakeUser.publicKey,
         recipient: fakeUser.publicKey,
+        supportlevel: supportlevel.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
       signers: [receipt, fakeUser],
@@ -133,11 +170,12 @@ describe('flobrij', () => {
     );
     await program.provider.connection.confirmTransaction(signature);
 
-    const tx = await program.rpc.createReceipt(EMAIL, TEST_AMOUNT, EXP_HOURS, {
+    const tx = await program.rpc.createReceipt(EMAIL, EXP_HOURS, {
       accounts: {
         receipt: receipt.publicKey,
         payer: fakeUser.publicKey,
         recipient: fakeUser.publicKey,
+        supportlevel: supportlevel.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
       signers: [receipt, fakeUser],
