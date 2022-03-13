@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 use anchor_lang::solana_program::system_program;
 
-declare_id!("Fuang566VQdoN4kWbScQtPiDRKpZqGoYkFy26kSdtBmJ");
+declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
 
 #[program]
 pub mod flobrij {
