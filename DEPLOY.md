@@ -9,9 +9,10 @@ References:
 
 **If you are upgrading, see "Upgrading" below.**
 
+- Make sure you have around 4 SOL to deploy.
 - Create a local `/deploy` folder.
 - Run `npm run devnet:generate-keypair`
-- Airdrop some SOL for deployment via `npm run devnet:airdrop` -- make sure you run this enough times to get at least 5 SOL.
+- Airdrop for atleast 4 SOL for deployment via `npm run devnet:airdrop` -- run twice to get 4 SOL
 - Update `Anchor.toml` to make sure `[provider]' is updated. Seems to be needed -- wallet override didn't seem to be working:
 
 ```
@@ -40,4 +41,8 @@ wallet = "~/rust-programs/deploy/programauthority-keypair.json"
 
 ## Upgrading
 
-(coming soon)
+Same setup as First-time Deploy except run:
+
+  solana balance <key here> --url devnet # to find balance before
+  npm run devnet:upgrade
+  solana balance <key here> --url devnet # to find balance after

@@ -4,16 +4,21 @@
 //
 // Changes:
 // - Split out "deploy" into separate script (github.com/briangershon)
+// - Manually decide to deploy or ugprade via command line (github.com/briangershon)
 
 import fs from 'fs';
-
 import spawn from 'cross-spawn';
 import path from 'path';
-
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-
 import { Keypair, Connection } from '@solana/web3.js';
+
+const args = process.argv.slice(2);
+if (args.length != 1) {
+  console.log('Error: You must pass in either "deploy" or "upgrade.');
+  process.exit(1);
+}
+const [command] = args;
 
 const projectName = 'flobrij';
 const network = 'devnet';
@@ -56,22 +61,23 @@ function readKeyfile(keypairfile) {
     process.exit(1);
   }
 
-  // DEPLOY
-
-  spawn.sync('anchor', ['build'], { stdio: 'inherit' });
-  method = ['deploy'];
-
   programAuthorityKeypair = readKeyfile(programAuthorityKeypairFile);
+  spawn.sync('anchor', ['build'], { stdio: 'inherit' });
 
-  // //UPGRADE PATH
-  // console.log(`\n\n\⚙️ Upgrading program.\n`);
-
-  // method = [
-  //   'upgrade',
-  //   `target/deploy/${projectName}.so`,
-  //   '--program-id',
-  //   programId,
-  // ];
+  if (command === 'deploy') {
+    // NEW DEPLOY PATH
+    console.log(`\n\n\⚙️  Deploying program...\n`);
+    method = ['deploy'];
+  } else if (command == 'upgrade') {
+    // UPGRADE PATH
+    console.log(`\n\n\⚙️  Upgrading program...\n`);
+    method = [
+      'upgrade',
+      `target/deploy/${projectName}.so`,
+      '--program-id',
+      programId,
+    ];
+  }
 
   console.log([
     ...method,
