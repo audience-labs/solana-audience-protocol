@@ -40,3 +40,7 @@ Copy IDL to front-end
 ## How do I debug Rust by logging variables?
 
 I created a gist with more info: https://gist.github.com/briangershon/89dfe197941c0abbd26db991ce350ce5
+
+## How do I deploy?
+
+See [DEPLOY.md](./DEPLOY.md)
