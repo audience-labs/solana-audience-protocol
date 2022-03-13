@@ -41,7 +41,9 @@ wallet = "~/rust-programs/deploy/programauthority-keypair.json"
 
 ## Upgrading
 
-Same setup as First-time Deploy except run:
+Upgrading is much cheaper than initial deploy. It's about 0.001 SOL.
+
+Same setup as "First-time Deploy" except run:
 
   solana balance <key here> --url devnet # to find balance before
   npm run devnet:upgrade
