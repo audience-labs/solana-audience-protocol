@@ -4,7 +4,9 @@
     },
     "scripts": {
         "style": "prettier --write tests && rustfmt programs/flobrij/src/lib.rs",
-        "deploy:devnet": "node ./scripts/deploy.mjs"
+        "devnet:generate-keypair": "node ./scripts/generate-keypair.mjs",
+        "devnet:airdrop": "node ./scripts/airdrop.mjs",
+        "devnet:deploy": "node ./scripts/deploy.mjs"
     },
     "devDependencies": {
         "@types/mocha": "^9.0.0",
