@@ -1,4 +1,4 @@
-# Deploy
+# Deploying Flobrij Anchor Program to Devnet
 
 References:
 
@@ -31,3 +31,10 @@ Run deploy:
 At the end it copies the IDL to the front-end, you need to check this in and deploy the front-end.
 
     cp target/idl/${projectName}.json ../flobrij-frontend/src/idl.json
+
+### Save the keys!
+
+Make sure you save the following keypair files to a password safe:
+
+- `./deploy/programauthority-keypair.json` and 12-word seeds for recovery
+- `./target/deploy/flobrij-keypair.json`

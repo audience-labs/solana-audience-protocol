@@ -4,7 +4,7 @@
     },
     "scripts": {
         "style": "prettier --write tests && rustfmt programs/flobrij/src/lib.rs",
-        "deploy:devnet": "node ./deploy.mjs"
+        "deploy:devnet": "node ./scripts/deploy.mjs"
     },
     "devDependencies": {
         "@types/mocha": "^9.0.0",
