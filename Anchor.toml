@@ -5,7 +5,7 @@ seeds = false
 flobrij = "6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve"
 
 [programs.devnet]
-flobrij = "6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve"
+flobrij = "GbZsjFDK2PAgZausAKxhBNdZjoUgLy6sVvb92ohGr2je"
 
 [registry]
 url = "https://anchor.projectserum.com"

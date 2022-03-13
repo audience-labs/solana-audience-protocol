@@ -12,7 +12,8 @@ import { dirname } from 'path';
 
 import { Keypair, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-const projectName = 'solblog';
+const projectName = 'flobrij';
+const network = 'devnet'; // "devnet". Use "localnet" for testing.
 
 const SLASH = path.sep;
 
@@ -29,7 +30,12 @@ const programKeypairFile = path.resolve(
   `${__dirname}${SLASH}${programKeyfileName}`
 );
 
-const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+let connection;
+if (network === 'Localnet') {
+  connection = new Connection('http://localhost:8899', 'confirmed');
+} else {
+  connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+}
 
 function readKeyfile(keypairfile) {
   let kf = fs.readFileSync(keypairfile);
@@ -46,7 +52,6 @@ function readKeyfile(keypairfile) {
   let programKeypair;
 
   programKeypair = readKeyfile(programKeypairFile);
-  console.log({ publicKey: programKeypair.publicKey });
   programId = programKeypair.publicKey.toString();
 
   if (!fs.existsSync(programAuthorityKeypairFile)) {
@@ -56,11 +61,16 @@ function readKeyfile(keypairfile) {
     spawn.sync('anchor', ['build'], { stdio: 'inherit' });
 
     programAuthorityKeypair = new Keypair();
+    console.log(
+      '\n\nRequesting airdrop for',
+      programAuthorityKeypair.publicKey.toString()
+    );
     let signature = await connection.requestAirdrop(
       programAuthorityKeypair.publicKey,
       LAMPORTS_PER_SOL * 5
     );
-    await connection.confirmTransaction(signature);
+    const result = await connection.confirmTransaction(signature);
+    console.log('\n\nBALANCE', await connection.getBalance(programAuthorityKeypair.publicKey));
 
     console.log(`\n\n\⚙️ Created keypair.\n`);
     console.log(`\n\n\⚙️ Saving keypair. ${programAuthorityKeypairFile}\n`);
@@ -86,13 +96,20 @@ function readKeyfile(keypairfile) {
     ];
   }
 
-  console.log({ method });
+  console.log([
+    ...method,
+    '--provider.cluster',
+    `${network}`,
+    '--provider.wallet',
+    `${programAuthorityKeypairFile}`,
+  ]);
+
   spawn.sync(
     'anchor',
     [
       ...method,
       '--provider.cluster',
-      'Devnet',
+      `${network}`,
       '--provider.wallet',
       `${programAuthorityKeypairFile}`,
     ],
@@ -101,10 +118,12 @@ function readKeyfile(keypairfile) {
 
   fs.copyFile(
     `target/idl/${projectName}.json`,
-    `app/src/lib/idl/${projectName}.json`,
+    `../flobrij-frontend/src/idl.json`,
     (err) => {
       if (err) throw err;
-      console.log(`${projectName}.json was copied to ./app`);
+      console.log(
+        `${projectName}.json was copied to front-end. MAKE SURE YOU CHECK-IN THIS FILE ON FRONT-END AND DEPLOY THAT`
+      );
     }
   );
 })();
