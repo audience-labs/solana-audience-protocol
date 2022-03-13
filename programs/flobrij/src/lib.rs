@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_instruction;
 use anchor_lang::solana_program::system_program;
 
-declare_id!("6nLbF7aMUH9GYsBFkW3uRA117p122rgN5P6UVwiBi9ve");
+declare_id!("Fuang566VQdoN4kWbScQtPiDRKpZqGoYkFy26kSdtBmJ");
 
 #[program]
 pub mod flobrij {
@@ -50,6 +50,10 @@ pub mod flobrij {
         receipt.amount = amount;
         receipt.expiration_hours = expiration_hours;
 
+        Ok(())
+    }
+
+    pub fn delete_receipt(_ctx: Context<DeleteReceipt>) -> ProgramResult {
         Ok(())
     }
 
@@ -131,6 +135,13 @@ pub struct CreateReceipt<'info> {
     pub supportlevel: Account<'info, SupportLevel>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DeleteReceipt<'info> {
+    #[account(mut, close = sol_dest)]
+    pub receipt: Account<'info, Receipt>,
+    sol_dest: AccountInfo<'info>,
 }
 
 #[account]
