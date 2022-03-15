@@ -105,6 +105,47 @@ describe('PatronReceipt', () => {
     );
   });
 
+  it('can delete my receipt', async function () {
+    const receipt = anchor.web3.Keypair.generate();
+    const fakeUser = anchor.web3.Keypair.generate();
+    const signature = await program.provider.connection.requestAirdrop(
+      fakeUser.publicKey,
+      AIRDROP_AMOUNT
+    );
+    await program.provider.connection.confirmTransaction(signature);
+
+    const tx = await program.rpc.createReceipt(EMAIL, EXP_HOURS, {
+      accounts: {
+        receipt: receipt.publicKey,
+        payer: fakeUser.publicKey,
+        recipient: fakeUser.publicKey,
+        supportlevel: supportlevel.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+      signers: [receipt, fakeUser],
+    });
+    const receiptAccount = await program.account.receipt.fetch(
+      receipt.publicKey
+    );
+
+    assert.equal(receiptAccount.email, EMAIL);
+    assert.ok(new anchor.BN(receiptAccount.amount).eq(TEST_AMOUNT));
+    assert.equal(receiptAccount.expirationHours, EXP_HOURS);
+    assert.equal(receiptAccount.recipient, fakeUser.publicKey.toString());
+
+    await program.rpc.deleteReceipt({
+      accounts: {
+        receipt: receipt.publicKey,
+        solDest: program.provider.wallet.publicKey,
+      },
+      signers: [],
+    });
+
+    await assert.rejects(async function () {
+      const account = await program.account.receipt.fetch(receipt.publicKey);
+    });
+  });
+
   it('Create a receipt as a different user', async () => {
     const receipt = anchor.web3.Keypair.generate();
     const fakeRecipient = anchor.web3.Keypair.generate();

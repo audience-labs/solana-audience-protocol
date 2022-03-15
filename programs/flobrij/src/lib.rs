@@ -53,6 +53,10 @@ pub mod flobrij {
         Ok(())
     }
 
+    pub fn delete_receipt(_ctx: Context<DeleteReceipt>) -> ProgramResult {
+        Ok(())
+    }
+
     pub fn create_supportlevel(
         ctx: Context<CreateSupportLevel>,
         title: String,
@@ -131,6 +135,13 @@ pub struct CreateReceipt<'info> {
     pub supportlevel: Account<'info, SupportLevel>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DeleteReceipt<'info> {
+    #[account(mut, close = sol_dest)]
+    pub receipt: Account<'info, Receipt>,
+    sol_dest: AccountInfo<'info>,
 }
 
 #[account]
