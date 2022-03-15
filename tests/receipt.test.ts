@@ -107,7 +107,6 @@ describe('PatronReceipt', () => {
 
   it('can delete my receipt', async function () {
     const receipt = anchor.web3.Keypair.generate();
-    const fakeRecipient = anchor.web3.Keypair.generate();
     const fakeUser = anchor.web3.Keypair.generate();
     const signature = await program.provider.connection.requestAirdrop(
       fakeUser.publicKey,
@@ -143,9 +142,7 @@ describe('PatronReceipt', () => {
     });
 
     await assert.rejects(async function () {
-      const account = await program.account.receipt.fetch(
-        receipt.publicKey
-      );
+      const account = await program.account.receipt.fetch(receipt.publicKey);
     });
   });
 
