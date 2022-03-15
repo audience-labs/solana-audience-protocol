@@ -144,7 +144,7 @@ describe('PatronReceipt', () => {
 
     await assert.rejects(async function () {
       const account = await program.account.receipt.fetch(
-        level.publicKey
+        receipt.publicKey
       );
     });
   });
